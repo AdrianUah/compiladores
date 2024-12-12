@@ -79,12 +79,15 @@ public class SymbolTable {
         symbols.put(name, new Symbol(name, type, value));
     }
 
-    public Symbol getSymbol(String name) throws RuntimeException {
-        if (!symbols.containsKey(name)) {
-            throw new RuntimeException("Error: Variable '" + name + "' no está definida.");
+    public Symbol containsSymbol(String name) throws RuntimeException {
+        if (symbols.containsKey(name)) {
+            return symbols.get(name);
+        }else{
+            return null;
         }
-        return symbols.get(name);
     }
+
+
 
     public void updateSymbol(String name, Object newValue) throws RuntimeException {
         if (!symbols.containsKey(name)) {

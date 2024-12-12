@@ -3,6 +3,13 @@ import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
     private SymbolTable symbolTable = new SymbolTable();
 
+    // Para manejar los comentarios
+    @Override
+    public String visitComent(miniBParser.ComentContext ctx) {
+        // Los comentarios en Jasmin se generan con la directiva `;`
+        return ";" + ctx.getText() + "\n";
+    }
+
     @Override
     public String visitAsign(miniBParser.AsignContext ctx) {
         String varName = ctx.identificador().getText();
@@ -13,7 +20,7 @@ public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
 
         try {
             // Si la variable ya existe, actualizar el valor
-            if (symbolTable.getSymbol(varName) != null) {
+            if (symbolTable.containsSymbol(varName) != null) {
                 symbolTable.updateSymbol(varName, value);
             } else {
                 // Si no existe, agregar a la tabla
@@ -22,6 +29,7 @@ public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
         } catch (RuntimeException e) {
             System.err.println("Error semántico: " + e.getMessage());
         }
+        System.out.println (String.format("    ; Asignación de %s\n%s    istore %d\n", varName, value, varName.hashCode() % 100));
         return String.format("    ; Asignación de %s\n%s    istore %d\n", varName, value, varName.hashCode() % 100);
     }
     
@@ -39,7 +47,6 @@ public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
             : "invokevirtual java/io/PrintStream/println(I)V";
 
         return String.format(
-            "    ; Print statement\n" +
             "    getstatic java/lang/System/out Ljava/io/PrintStream;\n" +
             "%s" +
             "    %s\n",
@@ -66,7 +73,7 @@ public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
     public String visitId(miniBParser.IdContext ctx) {
         String varName = ctx.getText();
         try {
-            Symbol symbol = symbolTable.getSymbol(varName);
+            Symbol symbol = symbolTable.containsSymbol(varName);
             return symbol.getValue().toString();
         } catch (RuntimeException e) {
             System.err.println("Error semántico: Variable '" + varName + "' no definida.");
@@ -82,7 +89,7 @@ public class AnalizadorVisitor extends miniBParserBaseVisitor<String> {
         // Registrar la variable en la tabla de símbolos si no existe
         try {
             // Si la variable ya existe, actualizar el valor
-            if (symbolTable.getSymbol(varName) != null) {
+            if (symbolTable.containsSymbol(varName) != null) {
                 symbolTable.updateSymbol(varName, inputString);
             } else {
                 // Si no existe, agregar a la tabla
